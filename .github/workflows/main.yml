@@ -5,8 +5,8 @@ on:
     branches:
       - main
   schedule:
-    - cron: '0 */12 * * *' # 🚀 USTA: Artık tam 12 saatte bir otomatik çalışacak!
-  workflow_dispatch: # Elle tetiklemek için
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -38,7 +38,16 @@ jobs:
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
-          git add tr.m3u
-          git commit -m "IPTV Otomatik Güncellendi ($(date +'%d-%m-%Y %H:%M'))" || echo "Değişiklik yok, pass geçiliyor."
-          git pull origin main --no-rebase --strategy-option=ours --no-edit
-          git push
+          
+          # Dosya var mı ve git tarafından izleniyor mu kontrol et
+          if [ -f "tr.m3u" ]; then
+            git add tr.m3u
+            # Commit mesajı boşsa işlem yapma
+            git commit -m "IPTV Otomatik Güncellendi ($(date +'%d-%m-%Y %H:%M'))" || echo "Değişiklik yok."
+            # Pushlamadan önce mevcut güncellemeleri al
+            git pull origin main --rebase --strategy-option=ours
+            git push origin main
+          else
+            echo "HATA: tr.m3u dosyası bulunamadı, işlem atlanıyor."
+            exit 1
+          fi
